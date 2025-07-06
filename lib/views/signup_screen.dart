@@ -1,0 +1,160 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_firebase/services/signup_services.dart';
+import 'package:flutter_firebase/views/login_screen.dart';
+
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
+
+  @override
+  State<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
+  final globalKey = GlobalKey<FormState>();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  SignupServices signupServices = SignupServices();
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        foregroundColor: Colors.white,
+        centerTitle: true,
+        backgroundColor: Colors.blue,
+        title: const Text(
+          "Signup",
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 25),
+        child: Form(
+          key: globalKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              TextFormField(
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return "Enter email";
+                  }
+                  return null;
+                },
+                onTapOutside: (event) {
+                  FocusScope.of(context).requestFocus(FocusNode());
+                },
+                keyboardType: TextInputType.text,
+                controller: emailController,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
+                  labelText: "Email",
+                ),
+              ),
+              const SizedBox(height: 15),
+              TextFormField(
+                onTapOutside: (event) {
+                  FocusScope.of(context).requestFocus(FocusNode());
+                },
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return "Enter your Password";
+                  }
+                  return null;
+                },
+                obscureText: true,
+                keyboardType: TextInputType.text,
+                controller: passwordController,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.password),
+                  border: OutlineInputBorder(),
+                  labelText: "Password",
+                ),
+              ),
+              const SizedBox(height: 30),
+              MaterialButton(
+                height: 50,
+                minWidth: double.infinity,
+                color: Colors.blue,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15)),
+                onPressed: () {
+                  if (globalKey.currentState!.validate()) {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    signupServices
+                        .createUserData(
+                      emailController.text.toString(),
+                      passwordController.text.toString(),
+                    )
+                        .then(
+                      (value) {
+                        setState(() {
+                          isLoading = false;
+                        });
+                      },
+                    ).onError((error, stackTrace) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("$error"),
+                      ));
+                      print("$error");
+                      setState(() {
+                        isLoading = false;
+                      });
+                    });
+                  }
+                },
+                child: isLoading
+                    ? const SizedBox(
+                        height: 30,
+                        width: 30,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        "Signup",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Already have an account?"),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text("Login"),
+                  )
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
